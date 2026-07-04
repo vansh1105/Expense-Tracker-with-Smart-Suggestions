@@ -92,3 +92,10 @@ Make sure you have [Node.js](https://nodejs.org/) (v16+) and [MongoDB](https://w
 
 5. **Set up AI Advisor**:
    Open the app in your browser, click on the **Sparkle Icon** in the bottom right corner, click the key icon in the drawer header, and enter your free Google Gemini API Key from [Google AI Studio](https://aistudio.google.com/).
+
+---
+
+## ✍️ Author
+
+* **Vansh Gandhi** — [@vansh1105](https://github.com/vansh1105)
+
