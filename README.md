@@ -95,7 +95,6 @@ Make sure you have [Node.js](https://nodejs.org/) (v16+) and [MongoDB](https://w
 
 ---
 
-## ✍️ Author
+## 👤 Author
 
-* **Vansh Gandhi** — [@vansh1105](https://github.com/vansh1105)
-
+*   Vansh Gandhi — [GitHub](https://github.com/vansh1105)
