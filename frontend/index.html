@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A premium fully client-side expense tracker featuring smart analytics, overspending detection, budget alerts, interactive visualization, and CSV import/export functionality.">
+  <title>SmartSpend | Expense Tracker &amp; Smart Saving Suggestions</title>
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- External JS Libraries (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- Authentication Fullscreen Overlay -->
+  <div id="auth-overlay" class="auth-overlay active" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-primary); z-index: 2000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(20px);">
+    <div class="auth-card glass-card" style="width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 24px; padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);">
+      <div class="auth-logo-area" style="display: flex; align-items: center; gap: 12px; justify-content: center;">
+        <div class="logo-icon" style="background: var(--accent-light); color: var(--accent); padding: 8px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+          <i data-lucide="wallet" style="width: 24px; height: 24px;"></i>
+        </div>
+        <h2 style="font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; letter-spacing: -0.5px;">SmartSpend</h2>
+      </div>
+      <p class="auth-subtitle" style="text-align: center; color: var(--text-secondary); font-size: 0.9rem; margin-top: -12px;">Track. Analyze. Save. Predict.</p>
+      
+      <div class="auth-tabs" style="display: flex; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+        <button id="auth-tab-login" type="button" class="auth-tab active" style="flex: 1; background: none; border: none; padding: 8px; font-weight: 600; color: var(--text-primary); cursor: pointer; text-align: center; border-bottom: 2px solid var(--accent); transition: all var(--transition-fast);">Log In</button>
+        <button id="auth-tab-signup" type="button" class="auth-tab" style="flex: 1; background: none; border: none; padding: 8px; font-weight: 600; color: var(--text-secondary); cursor: pointer; text-align: center; border-bottom: 2px solid transparent; transition: all var(--transition-fast);">Sign Up</button>
+      </div>
+      
+      <form id="auth-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="form-group" id="username-group" style="display: none;">
+          <label for="auth-username-input" class="form-label">Username</label>
+          <input type="text" id="auth-username-input" class="form-control" placeholder="Choose a username">
+        </div>
+        
+        <div class="form-group">
+          <label for="auth-email-input" class="form-label">Email Address</label>
+          <input type="email" id="auth-email-input" class="form-control" placeholder="yourname@domain.com" required>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 8px;">
+          <label for="auth-password-input" class="form-label">Password</label>
+          <input type="password" id="auth-password-input" class="form-control" placeholder="••••••••" required>
+        </div>
+        
+        <button type="submit" id="auth-submit-btn" class="btn btn-primary" style="width: 100%; justify-content: center; height: 42px; font-weight: 600;">
+          <span>Log In</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- App Main Wrapper -->
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="logo-container">
+        <div class="logo-icon">
+          <i class="lucide-wallet" data-lucide="wallet" style="width: 24px; height: 24px;"></i>
+        </div>
+        <div class="logo-text">SmartSpend</div>
+      </div>
+      
+      <nav style="flex-grow: 1;">
+        <ul class="nav-menu">
+          <li class="nav-item active">
+            <button id="nav-dashboard-btn" data-tab="dashboard">
+              <i class="lucide-layout-dashboard" data-lucide="layout-dashboard"></i>
+              <span>Dashboard</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button id="nav-transactions-btn" data-tab="transactions">
+              <i class="lucide-list-collapse" data-lucide="list-collapse"></i>
+              <span>Transactions Log</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button id="nav-budgets-btn" data-tab="budgets">
+              <i class="lucide-piggy-bank" data-lucide="piggy-bank"></i>
+              <span>Budgets &amp; Limits</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode">
+          <i class="lucide-sun" data-lucide="sun"></i>
+          <span>Light Mode</span>
+        </button>
+        
+        <div class="user-profile">
+          <div class="user-avatar" id="user-avatar-initials">VG</div>
+          <div class="user-info" style="flex-grow: 1;">
+            <span class="user-name" id="user-display-name">Vansh Gandhi</span>
+            <span class="user-role">Premium User</span>
+          </div>
+          <button id="logout-btn" class="logout-btn" title="Logout" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; transition: color var(--transition-fast);">
+            <i class="lucide-log-out" data-lucide="log-out" style="width: 18px; height: 18px;"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Viewport Section -->
+    <main class="main-viewport">
+      
+      <!-- Top Header -->
+      <header class="app-header">
+        <button id="mobile-menu-toggle" class="mobile-nav-toggle" aria-label="Toggle mobile menu">
+          <i class="lucide-menu" data-lucide="menu"></i>
+        </button>
+        
+        <div class="header-title-wrapper">
+          <h1 id="main-heading">SmartSpend</h1>
+          <p id="main-subheading">Personal Expense Tracker &amp; Smart Analytics</p>
+        </div>
+        
+        <div class="header-actions">
+          <select id="month-selector" class="form-control filter-select" aria-label="Select month to view">
+            <!-- Dynamically populated -->
+          </select>
+          <button id="add-expense-btn" class="btn btn-primary">
+            <i class="lucide-plus" data-lucide="plus" style="width: 18px; height: 18px;"></i>
+            <span>Add Expense</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- App View Wrapper -->
+      <div class="view-content">
+        
+        <!-- Budget Alert Banner (Dynamically shown) -->
+        <div id="global-alert-banner" class="budget-alert-banner" style="display: none;">
+          <div class="alert-left">
+            <i class="lucide-alert-triangle" data-lucide="alert-triangle" style="width: 20px; height: 20px;"></i>
+            <span id="alert-banner-text">Alert: You have consumed 85% of your total budget.</span>
+          </div>
+          <button id="close-alert-banner" class="btn-close-alert" aria-label="Close alert banner">
+            <i class="lucide-x" data-lucide="x" style="width: 16px; height: 16px;"></i>
+          </button>
+        </div>
+
+        <!-- VIEW 1: DASHBOARD -->
+        <section id="dashboard-view" class="app-view active-view">
+          
+          <!-- Key Metrics Cards -->
+          <div class="metrics-grid">
+            
+            <!-- Card 1: Total Spend -->
+            <div class="glass-card">
+              <div class="metric-header">
+                <span>Month Spending</span>
+                <div class="metric-icon purple">
+                  <i class="lucide-credit-card" data-lucide="credit-card"></i>
+                </div>
+              </div>
+              <div id="total-spend-val" class="metric-value">₹0.00</div>
+              <div class="metric-footer">
+                <i class="lucide-info" data-lucide="info"></i>
+                <span>Total amount spent in selected month</span>
+              </div>
+            </div>
+
+            <!-- Card 2: Budget Cap -->
+            <div class="glass-card">
+              <div class="metric-header">
+                <span>Monthly Budget</span>
+                <div class="metric-icon green">
+                  <i class="lucide-landmark" data-lucide="landmark"></i>
+                </div>
+              </div>
+              <div id="total-budget-val" class="metric-value">₹0</div>
+              <div class="budget-progress-container">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px;">
+                  <span id="budget-percent-val">0% Used</span>
+                  <span>Limit Goal</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div id="budget-progress-bar" class="progress-bar-fill normal"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3: Daily Average -->
+            <div class="glass-card">
+              <div class="metric-header">
+                <span>Daily Average</span>
+                <div class="metric-icon amber">
+                  <i class="lucide-calculator" data-lucide="calculator"></i>
+                </div>
+              </div>
+              <div id="daily-average-val" class="metric-value">₹0.00</div>
+              <div class="metric-footer">
+                <i class="lucide-calendar" data-lucide="calendar"></i>
+                <span>Daily rate computed so far</span>
+              </div>
+            </div>
+
+            <!-- Card 4: Top Category -->
+            <div class="glass-card">
+              <div class="metric-header">
+                <span>Highest Category</span>
+                <div class="metric-icon rose">
+                  <i class="lucide-pie-chart" data-lucide="pie-chart"></i>
+                </div>
+              </div>
+              <div id="top-category-val" class="metric-value">None</div>
+              <div class="metric-footer">
+                <span>Highest spend Day:</span>
+                <strong id="highest-spend-day-val">N/A</strong>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Charts and Analytics Dual Grid -->
+          <div class="dashboard-layout">
+            
+            <!-- Charts Section (Left Panel) -->
+            <div class="left-panel">
+              
+              <!-- Savings Goals Card -->
+              <div class="glass-card goals-card" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="chart-header" style="margin-bottom: 0;">
+                  <div class="chart-title">Savings Goals</div>
+                  <button id="add-goal-btn" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem; height: 32px;">
+                    <i class="lucide-plus" data-lucide="plus" style="width: 12px; height: 12px;"></i>
+                    <span>New Goal</span>
+                  </button>
+                </div>
+                <div id="goals-list-container" class="goals-list" style="display: flex; flex-direction: column; gap: 14px;">
+                  <!-- Dynamic saving goals list -->
+                </div>
+              </div>
+              
+              <!-- Category Breakdown Chart -->
+              <div class="glass-card chart-card">
+                <div class="chart-header">
+                  <div class="chart-title">Category Distribution</div>
+                  <i class="lucide-pie-chart" data-lucide="pie-chart" style="color: var(--text-muted);"></i>
+                </div>
+                <div class="chart-wrapper">
+                  <canvas id="categoryChartCanvas"></canvas>
+                </div>
+              </div>
+
+              <!-- Daily Spending Trends Chart -->
+              <div class="glass-card chart-card">
+                <div class="chart-header">
+                  <div class="chart-title">Daily Spending Log vs. Target Pace</div>
+                  <i class="lucide-trending-up" data-lucide="trending-up" style="color: var(--text-muted);"></i>
+                </div>
+                <div class="chart-wrapper">
+                  <canvas id="trendChartCanvas"></canvas>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Smart Analytics Column (Right Panel) -->
+            <div class="right-panel">
+              <div class="glass-card" style="height: 100%; display: flex; flex-direction: column; gap: 20px;">
+                <div class="chart-header" style="margin-bottom: 0;">
+                  <div class="chart-title">Smart Savings &amp; Insights</div>
+                  <i class="lucide-sparkles" data-lucide="sparkles" style="color: var(--accent);"></i>
+                </div>
+                
+                <!-- AI Spending Prediction Banner -->
+                <div class="ai-prediction-card" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 8px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 700; font-size: 0.85rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                      <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i> AI Spending Prediction
+                    </span>
+                    <span id="prediction-tag-status" class="category-badge cat-food" style="font-size: 0.75rem; padding: 2px 8px;">On Track</span>
+                  </div>
+                  <div id="ai-prediction-val" style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); line-height: 1.4;">
+                    You'll spend approximately ₹0.00 by the end of the month.
+                  </div>
+                </div>
+
+                <div id="suggestions-container" class="suggestions-panel" style="flex-grow: 1;">
+                  <!-- Dynamically generated suggestions -->
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- VIEW 2: TRANSACTIONS LOG -->
+        <section id="transactions-view" class="app-view">
+          <div class="glass-card expenses-container">
+            
+            <!-- Filters Bar -->
+            <div class="filter-bar">
+              <div class="search-input-wrap">
+                <i class="lucide-search" data-lucide="search"></i>
+                <input type="text" id="search-input" class="form-control" placeholder="Search by title, details...">
+              </div>
+              
+              <select id="category-filter" class="form-control filter-select" aria-label="Filter by category">
+                <option value="">All Categories</option>
+                <option value="food">Food</option>
+                <option value="transport">Transport</option>
+                <option value="utilities">Utilities</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="healthcare">Healthcare</option>
+                <option value="shopping">Shopping</option>
+                <option value="others">Others</option>
+              </select>
+
+              <input type="date" id="startDateFilter" class="form-control filter-date" style="display:none;" aria-label="Start date filter">
+              <input type="date" id="endDateFilter" class="form-control filter-date" style="display:none;" aria-label="End date filter">
+
+              <input type="date" id="start-date-filter" class="form-control filter-date" title="Start Date">
+              <input type="date" id="end-date-filter" class="form-control filter-date" title="End Date">
+              
+              <button id="export-csv-btn" class="btn btn-outline" title="Export to CSV">
+                <i class="lucide-download" data-lucide="download"></i>
+                <span>Export CSV</span>
+              </button>
+              
+              <button id="import-csv-btn" class="btn btn-outline" title="Import from CSV">
+                <i class="lucide-upload" data-lucide="upload"></i>
+                <span>Import CSV</span>
+              </button>
+            </div>
+
+            <!-- Table Logs -->
+            <div class="table-responsive">
+              <table class="transaction-table">
+                <thead>
+                  <tr>
+                    <th>Expense Info</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="transaction-table-body">
+                  <!-- JS generated rows -->
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- VIEW 3: BUDGETS & LIMITS -->
+        <section id="budgets-view" class="app-view">
+          <div class="budget-setup-grid">
+            
+            <!-- Left Info Panel -->
+            <div class="glass-card">
+              <h2 class="chart-title" style="margin-bottom: 12px; font-size: 1.25rem;">Budget Configuration</h2>
+              <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                Allocate a total monthly allowance and distribute specific spending limits among categories. 
+                SmartSpend analytics will track category performance and flag high spending rates before you exceed your target limits.
+              </p>
+              
+              <div style="margin-top: 32px;">
+                <button id="edit-budget-btn" class="btn btn-primary">
+                  <i class="lucide-sliders-horizontal" data-lucide="sliders-horizontal"></i>
+                  <span>Adjust Budget Limits</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Right Categories List -->
+            <div class="glass-card">
+              <h3 class="chart-title" style="margin-bottom: 16px;">Active Limits Breakdown</h3>
+              
+              <div id="budget-breakdown-list" class="budget-categories-list">
+                
+                <div class="budget-category-card">
+                  <span class="category-badge cat-food">
+                    <i class="lucide-utensils" data-lucide="utensils"></i> Food
+                  </span>
+                  <div class="budget-info-row">
+                    <div id="limit-display-food" class="budget-limit-val">₹0</div>
+                  </div>
+                </div>
+
+                <div class="budget-category-card">
+                  <span class="category-badge cat-transport">
+                    <i class="lucide-car" data-lucide="car"></i> Transport
+                  </span>
+                  <div class="budget-info-row">
+                    <div id="limit-display-transport" class="budget-limit-val">₹0</div>
+                  </div>
+                </div>
+
+                <div class="budget-category-card">
+                  <span class="category-badge cat-utilities">
+                    <i class="lucide-zap" data-lucide="zap"></i> Utilities
+                  </span>
+                  <div class="budget-info-row">
+                    <div id="limit-display-utilities" class="budget-limit-val">₹0</div>
+                  </div>
+                </div>
+
+                <div class="budget-category-card">
+                  <span class="category-badge cat-entertainment">
+                    <i class="lucide-sparkles" data-lucide="sparkles"></i> Entertainment
+                  </span>
+                  <div class="budget-info-row">
+                    <div id="limit-display-entertainment" class="budget-limit-val">₹0</div>
+                  </div>
+                </div>
+
+                <div class="budget-category-card">
+                  <span class="category-badge cat-healthcare">
+                    <i class="lucide-activity" data-lucide="activity"></i> Healthcare
+                  </span>
+                  <div class="budget-info-row">
+                    <div id="limit-display-healthcare" class="budget-limit-val">₹0</div>
+                  </div>
+                </div>
+
+                <div class="budget-category-card">
+                  <span class="category-badge cat-shopping">
+                    <i class="lucide-shopping-bag" data-lucide="shopping-bag"></i> Shopping
+                  </span>
+                  <div class="budget-info-row">
+                    <div id="limit-display-shopping" class="budget-limit-val">₹0</div>
+                  </div>
+                </div>
+
+                <div class="budget-category-card">
+                  <span class="category-badge cat-others">
+                    <i class="lucide-help-circle" data-lucide="help-circle"></i> Others
+                  </span>
+                  <div class="budget-info-row">
+                    <div id="limit-display-others" class="budget-limit-val">₹0</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- Modal 1: Add/Edit Expense -->
+  <div id="expense-modal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 id="expense-modal-title" class="modal-title">Add Expense</h2>
+        <button class="modal-close-btn" aria-label="Close modal">
+          <i class="lucide-x" data-lucide="x"></i>
+        </button>
+      </div>
+      
+      <form id="expense-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="expense-title-input" class="form-label">Expense Title</label>
+            <input type="text" id="expense-title-input" class="form-control" placeholder="e.g. Electric Bill, Grocery Store" required>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="expense-amount-input" class="form-label">Amount (₹)</label>
+              <input type="number" id="expense-amount-input" class="form-control" step="0.01" min="0.01" placeholder="0.00" required>
+            </div>
+            <div class="form-group">
+              <label for="expense-category-input" class="form-label">Category</label>
+              <select id="expense-category-input" class="form-control" required>
+                <option value="" disabled selected>Select Category</option>
+                <option value="food">Food</option>
+                <option value="transport">Transport</option>
+                <option value="utilities">Utilities</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="healthcare">Healthcare</option>
+                <option value="shopping">Shopping</option>
+                <option value="others">Others</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="expense-date-input" class="form-label">Transaction Date</label>
+            <input type="date" id="expense-date-input" class="form-control" required>
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="expense-desc-input" class="form-label">Short Description</label>
+            <textarea id="expense-desc-input" class="form-control" rows="3" placeholder="Optional notes..."></textarea>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Edit Budgets -->
+  <div id="budget-modal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Configure Limits</h2>
+        <button class="modal-close-btn" aria-label="Close modal">
+          <i class="lucide-x" data-lucide="x"></i>
+        </button>
+      </div>
+      
+      <form id="budget-form">
+        <div class="modal-body" style="max-height: 60vh;">
+          <div class="form-group" style="border-bottom: 1px solid var(--border-color); padding-bottom: 20px;">
+            <label for="budget-total-input" class="form-label" style="font-size: 0.95rem; color: var(--accent);">Total Monthly Budget (₹)</label>
+            <input type="number" id="budget-total-input" class="form-control" style="font-size: 1.1rem; font-weight: 600;" min="1" placeholder="2000" required>
+          </div>
+          
+          <h3 class="form-label" style="margin: 20px 0 12px 0;">Category-wise Budgets</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="budget-food-input" class="form-label">Food (₹)</label>
+              <input type="number" id="budget-food-input" class="form-control" min="0" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label for="budget-transport-input" class="form-label">Transport (₹)</label>
+              <input type="number" id="budget-transport-input" class="form-control" min="0" placeholder="0">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="budget-utilities-input" class="form-label">Utilities (₹)</label>
+              <input type="number" id="budget-utilities-input" class="form-control" min="0" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label for="budget-entertainment-input" class="form-label">Entertainment (₹)</label>
+              <input type="number" id="budget-entertainment-input" class="form-control" min="0" placeholder="0">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="budget-healthcare-input" class="form-label">Healthcare (₹)</label>
+              <input type="number" id="budget-healthcare-input" class="form-control" min="0" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label for="budget-shopping-input" class="form-label">Shopping (₹)</label>
+              <input type="number" id="budget-shopping-input" class="form-control" min="0" placeholder="0">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="budget-others-input" class="form-label">Others (₹)</label>
+            <input type="number" id="budget-others-input" class="form-control" min="0" placeholder="0">
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Budgets</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 3: Import CSV -->
+  <div id="import-modal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 class="modal-title">Import CSV File</h2>
+        <button class="modal-close-btn" aria-label="Close modal">
+          <i class="lucide-x" data-lucide="x"></i>
+        </button>
+      </div>
+      
+      <form id="csv-import-form">
+        <div class="modal-body">
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">
+            Import your transaction history using a CSV file. The file must contain the following header titles exactly:
+            <strong>Title</strong>, <strong>Amount</strong>, <strong>Category</strong>, and <strong>Date</strong>.
+          </p>
+
+          <div id="csv-drag-area" class="csv-drag-area">
+            <i class="lucide-file-spreadsheet" data-lucide="file-spreadsheet"></i>
+            <p>Drag &amp; drop your CSV file here, or click to browse</p>
+            <div id="csv-file-name" class="file-name"></div>
+            <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+          </div>
+          
+          <div style="text-align: center;">
+            <a href="data:text/csv;charset=utf-8,Title,Amount,Category,Date,Description%0ASample%20Grocery,45.20,food,2026-06-12,Weekly%20groceries%0ASubscription%20Service,14.99,entertainment,2026-06-10,Netflix" class="csv-template-link" download="expense_template.csv">
+              <i class="lucide-download" data-lucide="download" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>Download CSV Sample Template
+            </a>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Import File</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 4: Add/Edit Savings Goal -->
+  <div id="goal-modal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 id="goal-modal-title" class="modal-title">New Savings Goal</h2>
+        <button class="modal-close-btn" aria-label="Close modal">
+          <i class="lucide-x" data-lucide="x"></i>
+        </button>
+      </div>
+      
+      <form id="goal-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="goal-title-input" class="form-label">Goal Name</label>
+            <input type="text" id="goal-title-input" class="form-control" placeholder="e.g. Save for Laptop, Emergency Fund" required>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="goal-target-input" class="form-label">Target Amount (₹)</label>
+              <input type="number" id="goal-target-input" class="form-control" min="1" placeholder="50000" required>
+            </div>
+            <div class="form-group">
+              <label for="goal-current-input" class="form-label">Current Savings (₹)</label>
+              <input type="number" id="goal-current-input" class="form-control" min="0" placeholder="0" value="0">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="goal-category-input" class="form-label">Goal Category</label>
+            <select id="goal-category-input" class="form-control">
+              <option value="shopping">Shopping / Purchase</option>
+              <option value="emergency">Emergency Fund</option>
+              <option value="investment">Investment</option>
+              <option value="travel">Travel</option>
+              <option value="others">Others</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Goal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 5: Add Funds to Savings Goal -->
+  <div id="add-funds-modal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Add Funds to Goal</h2>
+        <button class="modal-close-btn" aria-label="Close modal">
+          <i class="lucide-x" data-lucide="x"></i>
+        </button>
+      </div>
+      
+      <form id="add-funds-form">
+        <div class="modal-body">
+          <p id="add-funds-goal-title" style="font-weight: 600; margin-bottom: 12px; font-size: 1rem; color: var(--accent);">Goal: Laptop</p>
+          <div class="form-group">
+            <label for="add-funds-amount-input" class="form-label">Contribution Amount (₹)</label>
+            <input type="number" id="add-funds-amount-input" class="form-control" min="1" placeholder="e.g. 5000" required>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Funds</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Notification Toasts Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Floating Action Button (FAB) for AI Chatbot -->
+  <button id="ai-chat-toggle-fab" class="ai-chat-toggle-fab" aria-label="Open AI Assistant">
+    <i class="lucide-sparkles" data-lucide="sparkles"></i>
+  </button>
+
+  <!-- AI Chatbot Drawer -->
+  <div id="ai-chat-drawer" class="ai-chat-drawer">
+    <div class="ai-drawer-header">
+      <div class="ai-drawer-title-area">
+        <div class="ai-sparkles-icon">
+          <i class="lucide-sparkles" data-lucide="sparkles"></i>
+        </div>
+        <div>
+          <h3>SmartSpend AI</h3>
+          <span class="ai-status">Advisor Mode</span>
+        </div>
+      </div>
+      <div class="ai-drawer-actions">
+        <button id="ai-settings-toggle-btn" class="ai-icon-btn" title="Configure AI API Key">
+          <i class="lucide-key" data-lucide="key"></i>
+        </button>
+        <button id="ai-chat-close-btn" class="ai-icon-btn" title="Close Drawer">
+          <i class="lucide-x" data-lucide="x"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sub-header for API key input configuration (collapsible) -->
+    <div id="ai-api-config-panel" class="ai-api-config-panel" style="display: none;">
+      <p style="margin-top: 0; margin-bottom: 8px;">Enter Google Gemini API Key for customized intelligence. Keys are stored safely in your local browser.</p>
+      <div class="api-key-input-row">
+        <input type="password" id="ai-api-key-input" class="form-control" placeholder="Enter Gemini API Key..." aria-label="API Key Input">
+        <button id="ai-api-key-save-btn" class="btn btn-primary" style="padding: 0 12px; height: 38px;">Save</button>
+      </div>
+      <a href="https://aistudio.google.com/" target="_blank" class="get-key-link" style="display: inline-block; margin-top: 8px; font-size: 0.8rem; color: var(--accent);">Get a free key from Google AI Studio <i class="lucide-external-link" data-lucide="external-link" style="width: 12px; height: 12px; vertical-align: middle;"></i></a>
+    </div>
+
+    <!-- Chat Messages Window -->
+    <div id="ai-chat-messages" class="ai-chat-messages">
+      <!-- Messages populate dynamically -->
+    </div>
+
+    <!-- Chat Input Form -->
+    <form id="ai-chat-form" class="ai-chat-input-area">
+      <input type="text" id="ai-chat-input" class="form-control" placeholder="Ask AI about your spending..." required>
+      <button type="submit" id="ai-chat-send-btn" class="btn btn-primary" aria-label="Send message" style="border-radius: 8px; width: 42px; height: 42px; padding: 0; display: flex; align-items: center; justify-content: center;">
+        <i class="lucide-send" data-lucide="send" style="width: 18px; height: 18px;"></i>
+      </button>
+    </form>
+  </div>
+
+  <!-- Application JS Controllers -->
+  <script src="charts.js"></script>
+  <script src="analytics.js"></script>
+  <script src="ai.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
